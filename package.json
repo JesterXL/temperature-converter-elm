@@ -1,0 +1,16 @@
+{
+  "name": "tempature-converter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "elm-live Main.elm --start-page=index.html -- --output=main.js",
+    "build": "elm make Main.elm --optimize --output main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "elm-live": "^4.0.2"
+  }
+}
