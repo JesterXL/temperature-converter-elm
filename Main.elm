@@ -75,7 +75,14 @@ view model =
     section [ class "section" ]
         [ div [ class "container" ]
             [ h1 [ class "title" ] [ text "Temperature Converter" ]
-            , h2 [ class "subtitle" ] [ text "Converting from Fahrenheit to Celsius. Just start typing." ]
+            , h2 [class "subtitle"][
+                p [][text "Converts Fahrenheit to Celsius and Celsius to Fahrenheit. Type in numbers in either field and it'll convert the other one for you automatically."]
+                , br [][]
+                , p[][
+                    text "Code: "
+                    , a [href "https://github.com/JesterXL/temperature-converter-elm"][text "https://github.com/JesterXL/temperature-converter-elm"]
+                ]
+            ]
             , label [ for "fahrenheit", class "label" ] [text "Fahrenheit:"]
             , input
                 (
