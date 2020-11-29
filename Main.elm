@@ -1,33 +1,30 @@
 module Main exposing (main)
 
 import Browser
--- import Debug
+import Html exposing (Html, button, div, h1, h2, input, label, section, text)
+import Html.Attributes exposing (class, name, type_, for, value)
+import Html.Events exposing (onInput)
+import Debug
 import FormatNumber exposing (format)
 import FormatNumber.Locales exposing (Decimals(..), Locale, usLocale)
-import Html exposing (Html, button, div, form, h3, input, label, option, p, section, select, text, h1, h2, a, br)
-import Html.Attributes exposing (action, class, for, id, method, name, type_, value, href)
-import Html.Events exposing (onClick, onInput)
-
 
 type alias Model =
-    { fahrenheit : Float
+    { fahrenheitFieldValid : Bool
+    , celsiusFieldValid : Bool
+    , fahrenheit : Float 
     , celsius : Float
-    , fahrenheitField : String
-    , celsiusField : String
-    , fahrenheitLegit : Bool
-    , celsiusLegit : Bool
-    }
+    , fahrenheitFieldValue : String
+    , celsiusFieldValue : String }
 
 
 initialModel : Model
 initialModel =
-    { fahrenheit = 32
-    , celsius = 0
-    , fahrenheitField = "32"
-    , celsiusField = "0"
-    , fahrenheitLegit = True
-    , celsiusLegit = True
-    }
+    { fahrenheitFieldValid = True
+    , celsiusFieldValid = True
+    , fahrenheit = 32
+    , celsius = 0 
+    , fahrenheitFieldValue = "32"
+    , celsiusFieldValue = "0" }
 
 
 type Msg
@@ -37,90 +34,102 @@ type Msg
 
 update : Msg -> Model -> Model
 update msg model =
-    -- let
-    --     msg1 =
-    --         Debug.log "msg" msg
-    -- in
     case msg of
         FahrenheitToCelsius userInput ->
             case String.toFloat userInput of
                 Nothing ->
-                    { model | fahrenheitField = userInput, fahrenheitLegit = False }
-
+                    { model
+                        | fahrenheitFieldValue = userInput
+                        , fahrenheitFieldValid = False }
                 Just number ->
-                    { model | celsius = fToC number, fahrenheit = number, fahrenheitField = userInput, fahrenheitLegit = True, celsiusLegit = True }
-
+                    { model 
+                        | fahrenheit = number
+                        , celsius = fahrenheitToCelsius number
+                        , fahrenheitFieldValue = userInput
+                        , fahrenheitFieldValid = True
+                        , celsiusFieldValid = True }
+            
         CelsiusToFahrenheit userInput ->
             case String.toFloat userInput of
                 Nothing ->
-                    { model | celsiusField = userInput, celsiusLegit = False }
-
+                    { model
+                        | celsiusFieldValid = False
+                        , celsiusFieldValue = userInput }
                 Just number ->
-                    { model | fahrenheit = cToF number, celsius = number, celsiusField = userInput, fahrenheitLegit = True, celsiusLegit = True }
-
-
-fToC f =
-    (f - 32) / 1.8
-
-
-cToF c =
-    (c * 1.8) + 32
-
+                    { model
+                        | celsius = number
+                        , fahrenheit = celsiusToFahrenheit number
+                        , celsiusFieldValue = userInput
+                        , celsiusFieldValid = True 
+                        , fahrenheitFieldValid = True }
+                    
+fahrenheitToCelsius fahrenheit =
+    (fahrenheit - 32) / 1.8
+    
+celsiusToFahrenheit celsius =
+    (celsius * 1.8) + 32
+        
 
 view : Model -> Html Msg
 view model =
     section [ class "section" ]
         [ div [ class "container" ]
-            [ h1 [class "title"][text "Temperture Converter"]
-            , h2 [class "subtitle"][
-                p [][text "Converts Fahrenheit to Celsius and Celsius to Fahrenheit. Type in numbers in either field and it'll convert the other one for you automatically."]
-                , br [][]
-                , p[][
-                    text "Code: "
-                    , a [href "https://github.com/JesterXL/temperature-converter-elm"][text "https://github.com/JesterXL/temperature-converter-elm"]
-                ]
-            ]
-            , label [ for "fahrenheit", class "label" ] [ text "Fahrenheit" ]
+            [ h1 [ class "title" ] [ text "Temperature Converter" ]
+            , h2 [ class "subtitle" ] [ text "Converting from Fahrenheit to Celsius. Just start typing." ]
+            , label [ for "fahrenheit", class "label" ] [text "Fahrenheit:"]
             , input
-                [ name "fahrenheit"
-                , class "input"
-                , type_ "text"
-                , value (viewFahrenheit model)
-                , onInput FahrenheitToCelsius
-                ]
+                (
+                  [ name "fahrenheit"
+                  , type_ "text"
+                  , onInput FahrenheitToCelsius
+                  , value (viewFahrenheit model)
+                  ]
+                  ++
+                  getFahrenheitFieldValidOrNot model
+                )
                 []
-            , label [ for "celsius", class "label" ] [ text "Celsius" ]
+            , label [ for "celsius", class "label" ] [text "Celsius:"]
             , input
-                [ name "celsius"
-                , class "input"
-                , type_ "text"
-                , value (viewCelsius model)
-                , onInput CelsiusToFahrenheit
-                ]
+                (
+                  [ name "fahrenheit"
+                  , type_ "text"
+                  , onInput CelsiusToFahrenheit
+                  , value (viewCelsius model)
+                  ]
+                  ++
+                  getCelsiusFieldValidOrNot model
+                )
                 []
             ]
         ]
 
+getFahrenheitFieldValidOrNot model =
+    if model.fahrenheitFieldValid == True then
+        [class "input"]
+    else
+        [class "input is-danger"]
+        
+getCelsiusFieldValidOrNot model =
+    if model.celsiusFieldValid == True then
+        [class "input"]
+    else
+        [class "input is-danger"]
+
 
 viewFahrenheit model =
-    if model.fahrenheitLegit == True then
-        formatTemperature model.fahrenheit
-
+    if model.fahrenheitFieldValid == True then
+        model.fahrenheit |> formatTemperature
     else
-        model.fahrenheitField
-
-
+        model.fahrenheitFieldValue
+        
 viewCelsius model =
-    if model.celsiusLegit == True then
-        formatTemperature model.celsius
-
+    if model.celsiusFieldValid == True then
+        model.celsius |> formatTemperature
     else
-        model.celsiusField
+        model.celsiusFieldValue
 
-
-formatTemperature float =
-    format { usLocale | decimals = Max 2 } float
-
+formatTemperature number =
+    format { usLocale | decimals = Max 1 } number
 
 main : Program () Model Msg
 main =
